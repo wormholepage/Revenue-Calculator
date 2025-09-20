@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Wormhole 收益计算器（$USDT+$WHO）</title>
+  <style>
+    :root{ --bg:#0b1220; --card:#121a2b; --muted:#7f8ea3; --text:#e6edf6; --accent:#4ea1ff; --bad:#ff6b6b; }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#0b1220,#0a0f1c);color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+    .wrap{max-width:940px;margin:40px auto;padding:24px}
+    .title{font-weight:800;font-size:28px;letter-spacing:.3px;margin:0 0 18px}
+    .card{background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:16px;box-shadow:0 6px 30px rgba(0,0,0,.35)}
+    .grid{display:grid;gap:18px;padding:22px}
+    @media (min-width:760px){.grid{grid-template-columns:1fr 1fr}}
+    label{display:block;font-weight:600;margin-bottom:8px;color:#c8d4e4}
+    input,select{width:100%;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:#0f1627;color:var(--text);outline:none}
+    input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(78,161,255,.15)}
+    .hint{font-size:12px;color:var(--muted);margin-top:6px}
+    .error{color:var(--bad);font-size:12px;margin-top:6px}
+    .result{padding:22px;border-top:1px dashed rgba(255,255,255,.08);display:grid;gap:14px}
+    .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+    .kpis.three{grid-template-columns:repeat(3,1fr)}
+    .kpi{background:#0f1627;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:16px}
+    .kpi .label{font-size:12px;color:var(--muted)}
+    .kpi .value{font-size:22px;font-weight:800;margin-top:6px}
+    .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .badge{font-size:12px;padding:6px 10px;border-radius:999px;background:rgba(78,161,255,.12);border:1px solid rgba(78,161,255,.35);color:var(--accent)}
+    .actions{display:flex;gap:10px;flex-wrap:wrap}
+    button{cursor:pointer;border:1px solid rgba(255,255,255,.12);background:#172136;color:var(--text);padding:10px 14px;border-radius:12px;font-weight:700}
+    button.primary{background:var(--accent);color:#051225;border-color:transparent}
+    .muted{color:var(--muted)}
+    .footer{color:var(--muted);font-size:12px;margin-top:14px}
+    .hidden{display:none}
+    details{background:#0f1627;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:14px}
+    summary{cursor:pointer;font-weight:700}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{border:1px solid rgba(255,255,255,.08);padding:8px 10px;text-align:center}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1 class="title">Wormhole 收益计算器 <span class="muted">（$USDT+$WHO）</span></h1>
+    <div class="card">
+      <div class="grid">
+        <div>
+          <label for="point">地址点位（0–1之间）</label>
+          <input id="point" type="number" placeholder="例如：1 或 0.8" min="0" max="1" step="0.01" />
+          <div id="pointHint" class="hint">填 <strong>1</strong> 表示 <strong>1%</strong>；填 <strong>0.8</strong> 表示 <strong>0.8%</strong> 的基准上限。</div>
+          <div id="pointErr" class="error hidden"></div>
+        </div>
+        <div>
+          <label for="amount">托管金额（USDT，仅限下表金额）</label>
+          <input id="amount" type="number" placeholder="100–10000，100 的整数倍" min="100" step="100" />
+          <div id="amountErr" class="error hidden"></div>
+          <div class="hint">可选：100~1000（每 100 一档）、1000~10000（每 1000 一档）。</div>
+        </div>
+        <div>
+          <label for="period">托管周期</label>
+          <select id="period">
+            <option value="7" data-multiplier="0.6">7 天（收益分成率：60%）</option>
+            <option value="30" data-multiplier="0.7">30 天（收益分成率：70%）</option>
+            <option value="60" data-multiplier="0.8">60 天（收益分成率：80%）</option>
+            <option value="180" data-multiplier="0.9">180 天（收益分成率：90%）</option>
+            <option value="360" data-multiplier="1.0">360 天（收益分成率：100%）</option>
+          </select>
+          <div class="hint">注：此处按 <strong>360 天</strong> 作为最高档（题述“3600天”理解为笔误）。</div>
+        </div>
+        <div class="row actions">
+          <button id="calcBtn" class="primary">计算</button>
+          <button id="resetBtn">清空</button>
+          <span id="status" class="badge">等待输入</span>
+        </div>
+      </div>
+
+      <div class="result">
+        <div class="kpis three">
+          <div class="kpi">
+            <div class="label">日收益率（USDT）</div>
+            <div id="dailyRate" class="value">—</div>
+            <div class="hint">= 点位(%) × 周期系数</div>
+          </div>
+          <div class="kpi">
+            <div class="label">WHO 日基础奖励</div>
+            <div id="whoDaily" class="value">—</div>
+            <div class="hint">由托管金额对应表决定</div>
+          </div>
+          <div class="kpi">
+            <div class="label">周期天数</div>
+            <div id="days" class="value">—</div>
+          </div>
+        </div>
+
+        <div class="kpis three">
+          <div class="kpi">
+            <div class="label">每日收益（USDT）</div>
+            <div id="dailyIncome" class="value">—</div>
+          </div>
+          <div class="kpi">
+            <div class="label">WHO 总基础收益</div>
+            <div id="whoTotal" class="value">—</div>
+          </div>
+          <div class="kpi">
+            <div class="label">总收益（合计）</div>
+            <div id="grandTotal" class="value">—</div>
+            <div class="hint">显示为 USDT + WHO</div>
+          </div>
+        </div>
+
+        <div class="footer">
+          计算公式：<span class="muted">USDT 总收益 = 金额 × 日收益率 × 周期天数；WHO 总收益 = WHO 日奖励 × 周期天数。</span>
+        </div>
+
+        <details>
+          <summary>查看 WHO基础日奖励对照表（供参考）</summary>
+          <table>
+            <thead><tr><th>托管数量（USDT）</th><th>WHO 日奖励（枚）</th></tr></thead>
+            <tbody id="whoTableBody"></tbody>
+          </table>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (s)=>document.querySelector(s);
+    const pointEl = $('#point');
+    const amountEl = $('#amount');
+    const periodEl = $('#period');
+    const calcBtn = $('#calcBtn');
+    const resetBtn = $('#resetBtn');
+    const statusEl = $('#status');
+    const pointErr = $('#pointErr');
+    const amountErr = $('#amountErr');
+
+    const dailyRateEl = $('#dailyRate');
+    const whoDailyEl = $('#whoDaily');
+    const whoTotalEl = $('#whoTotal');
+    const daysEl = $('#days');
+    const dailyIncomeEl = $('#dailyIncome');
+    const grandTotalEl = $('#grandTotal');
+
+    // WHO 日奖励映射表
+    const WHO_MAP = {
+      100:0.25,200:0.5,300:0.9,400:1.2,500:1.75,600:2.1,700:2.8,800:3.2,900:4.05,1000:5,
+      2000:10,3000:15,4000:20,5000:25,6000:30,7000:35,8000:40,9000:45,10000:50
+    };
+
+    // 生成对照表
+    const whoTableBody = $('#whoTableBody');
+    (function fillWhoTable(){
+      const keys = Object.keys(WHO_MAP).map(Number).sort((a,b)=>a-b);
+      whoTableBody.innerHTML = keys.map(k=>`<tr><td>${k}</td><td>${WHO_MAP[k]}</td></tr>`).join('');
+    })();
+
+    function fmtPct(v){ return (v*100).toFixed(3).replace(/\.0+$/,'') + '%'; }
+    function fmtNum(v){ return Number(v).toFixed(2); }
+
+    function validate(){
+      let ok = true;
+      pointErr.classList.add('hidden');
+      amountErr.classList.add('hidden');
+
+      const point = Number(pointEl.value);
+      if (isNaN(point) || point < 0 || point > 1){
+        pointErr.textContent = '点位需在 0–1 之间（如 1、0.8、0.35）';
+        pointErr.classList.remove('hidden');
+        ok = false;
+      }
+
+      const amount = Number(amountEl.value);
+      if (isNaN(amount) || amount <= 0 || amount % 100 !== 0){
+        amountErr.textContent = '托管金额必须为大于 0 且为 100 的整数倍';
+        amountErr.classList.remove('hidden');
+        ok = false;
+      } else if (!(amount in WHO_MAP)){
+        amountErr.textContent = '当前仅支持 100–1000（步长 100）与 1000–10000（步长 1000）的金额档位';
+        amountErr.classList.remove('hidden');
+        ok = false;
+      }
+
+      statusEl.textContent = ok ? '可计算' : '输入有误';
+      return ok;
+    }
+
+    function calc(){
+      if(!validate()) return;
+      const point = Number(pointEl.value);           // 例如 0.8 表示 0.8%
+      const amount = Number(amountEl.value);
+      const days = Number(periodEl.value);
+      const multiplier = Number(periodEl.selectedOptions[0].dataset.multiplier);
+
+      // USDT 部分
+      const dailyRate = (point / 100) * multiplier;  // 小数，如 0.006 表示 0.6%
+      const dailyIncome = amount * dailyRate;
+      const totalUSDT = dailyIncome * days;
+
+      // WHO 部分
+      const whoDaily = WHO_MAP[amount];
+      const whoTotal = whoDaily * days;
+
+      // 展示
+      dailyRateEl.textContent = fmtPct(dailyRate);
+      whoDailyEl.textContent = whoDaily.toString();
+      whoTotalEl.textContent = whoTotal.toString();
+      daysEl.textContent = String(days) + ' 天';
+      dailyIncomeEl.textContent = fmtNum(dailyIncome);
+      grandTotalEl.textContent = `${fmtNum(totalUSDT)} USDT + ${whoTotal} WHO`;
+
+      statusEl.textContent = '已计算';
+    }
+
+    function reset(){
+      pointEl.value = '';
+      amountEl.value = '';
+      periodEl.selectedIndex = 0;
+      [dailyRateEl, whoDailyEl, whoTotalEl, daysEl, dailyIncomeEl, grandTotalEl].forEach(el=>el.textContent='—');
+      statusEl.textContent = '已清空';
+      pointErr.classList.add('hidden');
+      amountErr.classList.add('hidden');
+    }
+
+    calcBtn.addEventListener('click', calc);
+    resetBtn.addEventListener('click', reset);
+    [pointEl, amountEl, periodEl].forEach(el=>{
+      el.addEventListener('input', ()=>{ statusEl.textContent = '等待计算'; });
+      el.addEventListener('change', ()=>{ statusEl.textContent = '等待计算'; });
+    });
+
+    // 回车触发
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Enter') calc(); });
+  </script>
+</body>
+</html>
