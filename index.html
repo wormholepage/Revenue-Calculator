@@ -3,105 +3,222 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Wormhole 收益计算器（$USDT+$WHO）</title>
+  <meta name="theme-color" content="#0b1220" />
+  <title>Wormhole 收益计算器（$USDT+$WHO）· 美化版</title>
   <style>
-    :root{ --bg:#0b1220; --card:#121a2b; --muted:#7f8ea3; --text:#e6edf6; --accent:#4ea1ff; --bad:#ff6b6b; }
+    /* =============== CSS 变量 & 主题 =============== */
+    :root{
+      --bg: #0b1220;         /* 背景 */
+      --bg-alt:#0a0f1c;      /* 背景渐变色 */
+      --card:#0e1526;        /* 卡片底色 */
+      --card-2:#121a2b;      /* 卡片内层 */
+      --muted:#8ea0b9;       /* 次级文字 */
+      --text:#e6edf6;        /* 主文字 */
+      --accent:#4ea1ff;      /* 主色 */
+      --accent-2:#8bd5ff;    /* 主色亮 */
+      --good:#3bd67f;        /* 正向 */
+      --bad:#ff6b6b;         /* 错误 */
+      --warning:#ffb86b;     /* 提示 */
+      --ring: rgba(78,161,255,.35);
+      --border: rgba(255,255,255,.08);
+      --border-2: rgba(255,255,255,.06);
+      --shadow: 0 10px 40px rgba(0,0,0,.45);
+      --radius: 16px;
+    }
+
+    @media (prefers-color-scheme: light){
+      :root{
+        --bg:#f6f8fb; --bg-alt:#eef3fb; --card:#ffffff; --card-2:#f5f7fb; --text:#0c1220; --muted:#627089; --border:rgba(0,0,0,.08); --border-2:rgba(0,0,0,.06);
+      }
+    }
+
+    /* =============== 基础样式 =============== */
     *{box-sizing:border-box}
-    body{margin:0;background:linear-gradient(180deg,#0b1220,#0a0f1c);color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
-    .wrap{max-width:940px;margin:40px auto;padding:24px}
-    .title{font-weight:800;font-size:28px;letter-spacing:.3px;margin:0 0 18px}
-    .card{background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:16px;box-shadow:0 6px 30px rgba(0,0,0,.35)}
+    html,body{height:100%}
+    body{margin:0;background:linear-gradient(180deg,var(--bg),var(--bg-alt));color:var(--text);font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+    .wrap{max-width:1000px;margin:auto;padding:28px 20px 60px}
+
+    .header{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:28px 0 18px}
+    .title{font-weight:900;font-size:30px;letter-spacing:.2px;margin:0;background:linear-gradient(90deg,var(--text),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent}
+    .subtitle{color:var(--muted);font-size:13px;margin-top:6px}
+
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap}
+    .btn{cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text);padding:10px 14px;border-radius:12px;font-weight:700;transition:all .18s ease;backdrop-filter:saturate(140%) blur(2px)}
+    .btn:hover{transform:translateY(-1px);border-color:var(--ring)}
+    .btn:active{transform:translateY(0)}
+    .btn.primary{background:var(--accent);color:#051225;border-color:transparent}
+    .btn.ghost{background:rgba(255,255,255,.04)}
+
+    .card{position:relative;background:linear-gradient(180deg,rgba(255,255,255,.02),transparent) padding-box;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+    .card::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;background:linear-gradient(120deg,rgba(255,255,255,.12),transparent,rgba(78,161,255,.25));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+
     .grid{display:grid;gap:18px;padding:22px}
     @media (min-width:760px){.grid{grid-template-columns:1fr 1fr}}
-    label{display:block;font-weight:600;margin-bottom:8px;color:#c8d4e4}
-    input,select{width:100%;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:#0f1627;color:var(--text);outline:none}
-    input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(78,161,255,.15)}
+
+    label{display:block;font-weight:700;margin:0 0 8px;color:#c8d4e4}
+    .input{display:flex;gap:10px;align-items:center}
+    input,select{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--border);background:var(--card-2);color:var(--text);outline:none;transition:border-color .18s ease, box-shadow .18s ease}
+    input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(78,161,255,.15)}
+    input[type="range"]{height:36px;background:transparent}
     .hint{font-size:12px;color:var(--muted);margin-top:6px}
-    .error{color:var(--bad);font-size:12px;margin-top:6px}
-    .result{padding:22px;border-top:1px dashed rgba(255,255,255,.08);display:grid;gap:14px}
+    .error{color:var(--bad);font-size:12px;margin-top:6px;display:flex;align-items:center;gap:6px}
+
+    .seg{display:flex;gap:8px;flex-wrap:wrap}
+    .seg .chip{padding:8px 12px;border-radius:999px;border:1px solid var(--border);color:var(--text);cursor:pointer;user-select:none}
+    .seg .chip.active{border-color:var(--ring);background:rgba(78,161,255,.12);color:var(--accent)}
+
+    .status{display:inline-flex;align-items:center;gap:8px;font-size:12px;padding:6px 10px;border-radius:999px;background:rgba(78,161,255,.12);border:1px solid var(--ring);color:var(--accent)}
+    .status.bad{background:rgba(255,107,107,.1);border-color:rgba(255,107,107,.45);color:var(--bad)}
+    .status.ok{background:rgba(59,214,127,.1);border-color:rgba(59,214,127,.45);color:var(--good)}
+
+    .result{padding:22px;border-top:1px dashed var(--border);display:grid;gap:16px}
     .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
-    .kpis.three{grid-template-columns:repeat(3,1fr)}
-    .kpi{background:#0f1627;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:16px}
-    .kpi .label{font-size:12px;color:var(--muted)}
-    .kpi .value{font-size:22px;font-weight:800;margin-top:6px}
+    @media (min-width:900px){.kpis{grid-template-columns:repeat(3,1fr)}}
+    .kpi{position:relative;background:var(--card-2);border:1px solid var(--border-2);border-radius:12px;padding:16px;overflow:hidden}
+    .kpi .label{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+    .kpi .value{font-size:22px;font-weight:900;margin-top:6px}
+
     .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-    .badge{font-size:12px;padding:6px 10px;border-radius:999px;background:rgba(78,161,255,.12);border:1px solid rgba(78,161,255,.35);color:var(--accent)}
+    .badge{font-size:12px;padding:6px 10px;border-radius:999px;background:rgba(78,161,255,.12);border:1px solid var(--ring);color:var(--accent)}
     .actions{display:flex;gap:10px;flex-wrap:wrap}
-    button{cursor:pointer;border:1px solid rgba(255,255,255,.12);background:#172136;color:var(--text);padding:10px 14px;border-radius:12px;font-weight:700}
-    button.primary{background:var(--accent);color:#051225;border-color:transparent}
-    .muted{color:var(--muted)}
-    .footer{color:var(--muted);font-size:12px;margin-top:14px}
-    .hidden{display:none}
-    details{background:#0f1627;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:14px}
-    summary{cursor:pointer;font-weight:700}
-    table{width:100%;border-collapse:collapse;margin-top:10px}
-    th,td{border:1px solid rgba(255,255,255,.08);padding:8px 10px;text-align:center}
+
+    .footer{color:var(--muted);font-size:12px;margin-top:4px}
+    details{background:var(--card-2);border:1px solid var(--border-2);border-radius:12px;padding:14px}
+    summary{cursor:pointer;font-weight:800}
+
+    table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}
+    thead th{position:sticky;top:0;background:linear-gradient(180deg,rgba(255,255,255,.06),transparent)}
+    th,td{border:1px solid var(--border);padding:10px;text-align:center}
+
+    /* 进度条（周期分成率） */
+    .meter{height:10px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden;border:1px solid var(--border)}
+    .meter > span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .4s ease}
+
+    /* 提示气泡 */
+    [data-tip]{position:relative}
+    [data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:120%;left:0;white-space:nowrap;background:#0e1526;border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:8px;font-size:12px;box-shadow:var(--shadow)}
+
+    /* Toast */
+    .toast{position:fixed;inset:auto 16px 16px auto;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;border:1px solid var(--border);background:var(--card);box-shadow:var(--shadow);opacity:0;transform:translateY(8px);transition:all .25s ease;z-index:50}
+    .toast.show{opacity:1;transform:translateY(0)}
+
+    @media (prefers-reduced-motion: reduce){
+      .btn:hover{transform:none}
+      .toast{transition:none}
+      .kpi .value{transition:none}
+    }
   </style>
 </head>
 <body>
+  <!-- 图标集 -->
+  <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+    <symbol id="i-alert" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2 1 21h22L12 2Zm1 14h-2v2h2v-2Zm0-8h-2v6h2V8Z"/></symbol>
+    <symbol id="i-rocket" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2c3.5 0 6 2.5 6 6 0 4-3 8-6 11-3-3-6-7-6-11 0-3.5 2.5-6 6-6Zm0 4a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path fill="currentColor" d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><path fill="currentColor" d="M11 7h2v2h-2V7Zm0 4h2v6h-2v-6Zm1-9a10 10 0 1 0 0 20 10 10 0 0 0 0-20Z"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><path fill="currentColor" d="M16 1H4a2 2 0 0 0-2 2v12h2V3h12V1Zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Zm0 16H8V7h11v14Z"/></symbol>
+    <symbol id="i-broom" viewBox="0 0 24 24"><path fill="currentColor" d="M13 3h2l6 6-2 2-6-6V3ZM3 14l7-7 7 7-7 7c-3 0-4.5-.5-7-7Z"/></symbol>
+  </svg>
+
   <div class="wrap">
-    <h1 class="title">Wormhole 收益计算器 <span class="muted">（$USDT+$WHO）</span></h1>
-    <div class="card">
+    <div class="header">
+      <div>
+        <h1 class="title">Wormhole 收益计算器 <span class="subtitle">（USDT + WHO）</span></h1>
+        <div class="subtitle">更清晰的输入、更直观的结果，完全离线计算。</div>
+      </div>
+      <div class="toolbar" role="toolbar" aria-label="快速操作">
+        <button id="exampleBtn" class="btn ghost" data-tip="填入示例值"><svg width="16" height="16"><use href="#i-rocket"/></svg> 示例</button>
+        <button id="copyBtn" class="btn ghost" data-tip="复制结果到剪贴板"><svg width="16" height="16"><use href="#i-copy"/></svg> 复制结果</button>
+      </div>
+    </div>
+
+    <div class="card" aria-labelledby="calc-title">
       <div class="grid">
         <div>
-          <label for="point">地址点位（0–1之间）</label>
-          <input id="point" type="number" placeholder="例如：1 或 0.8" min="0" max="1" step="0.01" />
+          <label for="point">地址点位（0–1 之间）</label>
+          <div class="input">
+            <input id="point" type="number" inputmode="decimal" placeholder="例如：1 或 0.8" min="0" max="1" step="0.01" aria-describedby="pointHint pointErr" />
+          </div>
+          <input id="pointRange" type="range" min="0" max="1" step="0.01" aria-label="点位滑杆" />
           <div id="pointHint" class="hint">填 <strong>1</strong> 表示 <strong>1%</strong>；填 <strong>0.8</strong> 表示 <strong>0.8%</strong> 的基准上限。</div>
-          <div id="pointErr" class="error hidden"></div>
+          <div class="seg" aria-label="常用点位快捷选择">
+            <div class="chip" data-point="1">1%</div>
+            <div class="chip" data-point="0.8">0.8%</div>
+            <div class="chip" data-point="0.5">0.5%</div>
+          </div>
+          <div id="pointErr" class="error" role="alert" aria-live="polite" hidden>
+            <svg width="16" height="16"><use href="#i-alert"/></svg><span>点位需在 0–1 之间（如 1、0.8、0.35）。</span>
+          </div>
         </div>
+
         <div>
           <label for="amount">托管金额（USDT，仅限下表金额）</label>
-          <input id="amount" type="number" placeholder="100–10000，100 的整数倍" min="100" step="100" />
-          <div id="amountErr" class="error hidden"></div>
-          <div class="hint">可选：100~1000（每 100 一档）、1000~10000（每 1000 一档）。</div>
+          <div class="input">
+            <input id="amount" type="number" inputmode="numeric" placeholder="100–10000，100 的整数倍" min="100" step="100" aria-describedby="amountErr" />
+          </div>
+          <input id="amountRange" type="range" min="100" max="10000" step="100" aria-label="金额滑杆" />
+          <div class="seg" aria-label="常用金额快捷选择">
+            <div class="chip" data-amt="100">100</div>
+            <div class="chip" data-amt="500">500</div>
+            <div class="chip" data-amt="1000">1000</div>
+            <div class="chip" data-amt="5000">5000</div>
+            <div class="chip" data-amt="10000">10000</div>
+          </div>
+          <div id="amountErr" class="error" role="alert" aria-live="polite" hidden>
+            <svg width="16" height="16"><use href="#i-alert"/></svg><span>仅支持 100–1000（每 100）与 1000–10000（每 1000）。</span>
+          </div>
         </div>
+
         <div>
           <label for="period">托管周期</label>
-          <select id="period">
+          <select id="period" aria-describedby="periodHint">
             <option value="7" data-multiplier="0.6">7 天（收益分成率：60%）</option>
             <option value="30" data-multiplier="0.7">30 天（收益分成率：70%）</option>
             <option value="60" data-multiplier="0.8">60 天（收益分成率：80%）</option>
             <option value="180" data-multiplier="0.9">180 天（收益分成率：90%）</option>
             <option value="360" data-multiplier="1.0">360 天（收益分成率：100%）</option>
           </select>
-          <div class="hint">注：此处按 <strong>360 天</strong> 作为最高档（题述“3600天”理解为笔误）。</div>
+          <div id="periodHint" class="hint">注：此处按 <strong>360 天</strong> 为最高档（题述“3600天”理解为笔误）。</div>
+          <div class="hint">收益分成率进度：</div>
+          <div class="meter" aria-hidden="true"><span id="meterBar"></span></div>
         </div>
+
         <div class="row actions">
-          <button id="calcBtn" class="primary">计算</button>
-          <button id="resetBtn">清空</button>
-          <span id="status" class="badge">等待输入</span>
+          <button id="calcBtn" class="btn primary"><svg width="16" height="16"><use href="#i-rocket"/></svg> 计算</button>
+          <button id="resetBtn" class="btn"><svg width="16" height="16"><use href="#i-broom"/></svg> 清空</button>
+          <span id="status" class="status" aria-live="polite"><svg width="14" height="14"><use href="#i-info"/></svg> 等待输入</span>
         </div>
       </div>
 
-      <div class="result">
-        <div class="kpis three">
+      <div class="result" id="calc-title">
+        <div class="kpis">
           <div class="kpi">
-            <div class="label">日收益率（USDT）</div>
+            <div class="label"><svg width="14" height="14"><use href="#i-info"/></svg> 日收益率（USDT）</div>
             <div id="dailyRate" class="value">—</div>
             <div class="hint">= 点位(%) × 周期系数</div>
           </div>
           <div class="kpi">
-            <div class="label">WHO 日基础奖励</div>
+            <div class="label"><svg width="14" height="14"><use href="#i-info"/></svg> WHO 日基础奖励</div>
             <div id="whoDaily" class="value">—</div>
             <div class="hint">由托管金额对应表决定</div>
           </div>
           <div class="kpi">
-            <div class="label">周期天数</div>
+            <div class="label"><svg width="14" height="14"><use href="#i-info"/></svg> 周期天数</div>
             <div id="days" class="value">—</div>
           </div>
         </div>
 
-        <div class="kpis three">
+        <div class="kpis">
           <div class="kpi">
-            <div class="label">每日收益（USDT）</div>
+            <div class="label"><svg width="14" height="14"><use href="#i-info"/></svg> 每日收益（USDT）</div>
             <div id="dailyIncome" class="value">—</div>
           </div>
           <div class="kpi">
-            <div class="label">WHO 总基础收益</div>
+            <div class="label"><svg width="14" height="14"><use href="#i-info"/></svg> WHO 总基础收益</div>
             <div id="whoTotal" class="value">—</div>
           </div>
           <div class="kpi">
-            <div class="label">总收益（合计）</div>
+            <div class="label"><svg width="14" height="14"><use href="#i-info"/></svg> 总收益（合计）</div>
             <div id="grandTotal" class="value">—</div>
             <div class="hint">显示为 USDT + WHO</div>
           </div>
@@ -112,7 +229,7 @@
         </div>
 
         <details>
-          <summary>查看 WHO基础日奖励对照表（供参考）</summary>
+          <summary>查看 WHO 基础日奖励对照表（供参考）</summary>
           <table>
             <thead><tr><th>托管数量（USDT）</th><th>WHO 日奖励（枚）</th></tr></thead>
             <tbody id="whoTableBody"></tbody>
@@ -122,16 +239,21 @@
     </div>
   </div>
 
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
   <script>
     const $ = (s)=>document.querySelector(s);
     const pointEl = $('#point');
+    const pointRange = $('#pointRange');
     const amountEl = $('#amount');
+    const amountRange = $('#amountRange');
     const periodEl = $('#period');
     const calcBtn = $('#calcBtn');
     const resetBtn = $('#resetBtn');
     const statusEl = $('#status');
     const pointErr = $('#pointErr');
     const amountErr = $('#amountErr');
+    const meterBar = $('#meterBar');
 
     const dailyRateEl = $('#dailyRate');
     const whoDailyEl = $('#whoDaily');
@@ -139,6 +261,7 @@
     const daysEl = $('#days');
     const dailyIncomeEl = $('#dailyIncome');
     const grandTotalEl = $('#grandTotal');
+    const toast = $('#toast');
 
     // WHO 日奖励映射表
     const WHO_MAP = {
@@ -156,30 +279,49 @@
     function fmtPct(v){ return (v*100).toFixed(3).replace(/\.0+$/,'') + '%'; }
     function fmtNum(v){ return Number(v).toFixed(2); }
 
+    function showToast(msg){
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(()=>toast.classList.remove('show'), 1800);
+    }
+
+    function setStatus(type, text){
+      statusEl.textContent = '';
+      statusEl.className = 'status ' + (type||'');
+      const icon = document.createElementNS('http://www.w3.org/2000/svg','svg');
+      icon.setAttribute('width','14');
+      icon.setAttribute('height','14');
+      const use = document.createElementNS('http://www.w3.org/2000/svg','use');
+      use.setAttribute('href', type==='bad' ? '#i-alert' : (type==='ok' ? '#i-check' : '#i-info'));
+      icon.appendChild(use);
+      statusEl.appendChild(icon);
+      statusEl.appendChild(document.createTextNode(' ' + text));
+    }
+
+    function syncRange(){
+      // 同步滑杆与输入框
+      pointRange.value = pointEl.value || 0;
+      amountRange.value = amountEl.value || 100;
+    }
+
     function validate(){
       let ok = true;
-      pointErr.classList.add('hidden');
-      amountErr.classList.add('hidden');
+      pointErr.hidden = true; amountErr.hidden = true;
 
       const point = Number(pointEl.value);
       if (isNaN(point) || point < 0 || point > 1){
-        pointErr.textContent = '点位需在 0–1 之间（如 1、0.8、0.35）';
-        pointErr.classList.remove('hidden');
-        ok = false;
+        pointErr.hidden = false; ok = false;
       }
 
       const amount = Number(amountEl.value);
       if (isNaN(amount) || amount <= 0 || amount % 100 !== 0){
-        amountErr.textContent = '托管金额必须为大于 0 且为 100 的整数倍';
-        amountErr.classList.remove('hidden');
-        ok = false;
+        amountErr.hidden = false; ok = false;
       } else if (!(amount in WHO_MAP)){
-        amountErr.textContent = '当前仅支持 100–1000（步长 100）与 1000–10000（步长 1000）的金额档位';
-        amountErr.classList.remove('hidden');
-        ok = false;
+        amountErr.hidden = false; ok = false;
       }
 
-      statusEl.textContent = ok ? '可计算' : '输入有误';
+      setStatus(ok? 'ok':'bad', ok? '可计算' : '输入有误');
       return ok;
     }
 
@@ -207,29 +349,73 @@
       dailyIncomeEl.textContent = fmtNum(dailyIncome);
       grandTotalEl.textContent = `${fmtNum(totalUSDT)} USDT + ${whoTotal} WHO`;
 
-      statusEl.textContent = '已计算';
+      setStatus('ok','已计算');
     }
 
     function reset(){
       pointEl.value = '';
       amountEl.value = '';
       periodEl.selectedIndex = 0;
-      [dailyRateEl, whoDailyEl, whoTotalEl, daysEl, dailyIncomeEl, grandTotalEl].forEach(el=>el.textContent='—');
-      statusEl.textContent = '已清空';
-      pointErr.classList.add('hidden');
-      amountErr.classList.add('hidden');
+      ;[dailyRateEl, whoDailyEl, whoTotalEl, daysEl, dailyIncomeEl, grandTotalEl].forEach(el=>el.textContent='—');
+      pointErr.hidden = true; amountErr.hidden = true;
+      meter();
+      syncRange();
+      setStatus('', '已清空');
+      showToast('已清空');
     }
 
-    calcBtn.addEventListener('click', calc);
-    resetBtn.addEventListener('click', reset);
-    [pointEl, amountEl, periodEl].forEach(el=>{
-      el.addEventListener('input', ()=>{ statusEl.textContent = '等待计算'; });
-      el.addEventListener('change', ()=>{ statusEl.textContent = '等待计算'; });
+    function meter(){
+      const mul = Number(periodEl.selectedOptions[0].dataset.multiplier||0);
+      meterBar.style.width = (mul*100) + '%';
+    }
+
+    // 快捷 chip
+    document.querySelectorAll('[data-point]').forEach(ch=>{
+      ch.addEventListener('click', ()=>{ pointEl.value = ch.dataset.point; pointRange.value = ch.dataset.point; setStatus('', '等待计算'); });
+    });
+    document.querySelectorAll('[data-amt]').forEach(ch=>{
+      ch.addEventListener('click', ()=>{ amountEl.value = ch.dataset.amt; amountRange.value = ch.dataset.amt; setStatus('', '等待计算'); });
+    });
+
+    // 同步滑杆 <-> 输入
+    pointEl.addEventListener('input', ()=>{ pointRange.value = pointEl.value || 0; setStatus('', '等待计算'); });
+    pointRange.addEventListener('input', ()=>{ pointEl.value = pointRange.value; setStatus('', '等待计算'); });
+    amountEl.addEventListener('input', ()=>{
+      // 自动调整 step：100~1000 -> 100；>1000 -> 1000
+      const v = Number(amountEl.value||0);
+      amountEl.step = v <= 1000 ? 100 : 1000;
+      amountRange.step = amountEl.step;
+      amountRange.value = amountEl.value || 100;
+      setStatus('', '等待计算');
+    });
+    amountRange.addEventListener('input', ()=>{ amountEl.value = amountRange.value; setStatus('', '等待计算'); });
+
+    periodEl.addEventListener('change', ()=>{ setStatus('', '等待计算'); meter(); });
+
+    // 复制结果
+    $('#copyBtn').addEventListener('click', ()=>{
+      const txt = `点位: ${pointEl.value || '-'}%\n金额: ${amountEl.value || '-'} USDT\n周期: ${periodEl.value} 天\n—\n日收益率: ${dailyRateEl.textContent}\n每日收益: ${dailyIncomeEl.textContent} USDT\nWHO 日奖励: ${whoDailyEl.textContent}\nWHO 总收益: ${whoTotalEl.textContent}\n合计: ${grandTotalEl.textContent}`;
+      navigator.clipboard?.writeText(txt).then(()=>showToast('结果已复制')).catch(()=>showToast('复制失败'));
+    });
+
+    // 示例值
+    $('#exampleBtn').addEventListener('click', ()=>{
+      pointEl.value = 0.8; pointRange.value = 0.8;
+      amountEl.value = 5000; amountRange.value = 5000;
+      periodEl.value = '60'; meter();
+      setStatus('', '等待计算');
     });
 
     // 回车触发
     document.addEventListener('keydown', (e)=>{ if(e.key==='Enter') calc(); });
+
+    // 事件绑定
+    calcBtn.addEventListener('click', calc);
+    resetBtn.addEventListener('click', reset);
+
+    // 初始状态
+    meter();
+    syncRange();
   </script>
 </body>
 </html>
-
